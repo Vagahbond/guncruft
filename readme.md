@@ -4,7 +4,7 @@
 
 1. Enable camera and moving
 2. Draw a cube with triangles
-3. Add more cubes and avoid generating mesh between them
+3. Add more cubes and avoid generating mesh between them (culling/greedy mesh)
 4. Maybe a chunk system is necessary. Benchmark ?
 5. Player movement: make moving more realstic and add some asset that represents the Player
 6. Creating cubes: allow player to lay cubes down and break cubes
