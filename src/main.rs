@@ -1,5 +1,6 @@
 use std::f32::consts::PI;
 
+use bevy::window::{CursorGrabMode, PrimaryWindow};
 use bevy::{color::palettes::css::BLUE, pbr::light_consts::lux::FULL_DAYLIGHT, prelude::*};
 use player::{
     fps_camera::move_camera,
@@ -39,7 +40,17 @@ fn setup_world(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut q_windows: Query<&mut Window, With<PrimaryWindow>>,
 ) {
+    /* let mut primary_window = q_windows.single_mut().unwrap();
+
+        // for a game that doesn't use the cursor (like a shooter):
+        // use `Locked` mode to keep the cursor in one place
+        primary_window.cursor_options.grab_mode = CursorGrabMode::Locked;
+
+        // also hide the cursor
+        primary_window.cursor_options.visible = false;
+    */
     // cube
     commands.spawn((
         Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
@@ -67,6 +78,26 @@ fn setup_world(
         },
         Transform::from_xyz(-5.0, 10.0, -5.0).with_rotation(Quat::from_rotation_x(-PI / 4.)),
     ));
+
+    // Chessboard Plane
+    let black_material = materials.add(Color::BLACK);
+    let white_material = materials.add(Color::WHITE);
+
+    let plane_mesh = meshes.add(Plane3d::default().mesh().size(2.0, 2.0));
+
+    for x in -3..4 {
+        for z in -3..4 {
+            commands.spawn((
+                Mesh3d(plane_mesh.clone()),
+                MeshMaterial3d(if (x + z) % 2 == 0 {
+                    black_material.clone()
+                } else {
+                    white_material.clone()
+                }),
+                Transform::from_xyz(x as f32 * 2.0, -1.0, z as f32 * 2.0),
+            ));
+        }
+    }
 }
 
 /// Moves the light around.

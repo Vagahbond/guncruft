@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use bevy::{
     ecs::{component::Component, system::Query},
     input::{keyboard::KeyCode, ButtonInput},
@@ -9,19 +11,19 @@ use bevy::{
 pub struct FPSMovement {
     /// A vector representing the player's input, accumulated over all frames that ran
     /// since the last time the physics simulation was advanced.
-    acc_input: Vec2,
+    pub acc_input: Vec2,
     /// A vector representing the player's velocity in the physics simulation.
-    velocity: Vec3,
+    pub velocity: Vec3,
     /// The actual position of the player in the physics simulation.
     /// This is separate from the `Transform`, which is merely a visual representation.
     ///
     /// If you want to make sure that this component is always initialized
     /// with the same value as the `Transform`'s translation, you can
     /// use a [component lifecycle hook](https://docs.rs/bevy/0.14.0/bevy/ecs/component/struct.ComponentHooks.html)
-    phys_translation: Vec3,
+    pub phys_translation: Vec3,
     /// The value [`PhysicalTranslation`] had in the last fixed timestep.
     /// Used for interpolation in the `interpolate_rendered_transform` system.
-    prev_phys_translation: Vec3,
+    pub prev_phys_translation: Vec3,
 }
 
 /// Handle keyboard input and accumulate it in the `AccumulatedInput` component.
@@ -34,34 +36,25 @@ pub fn handle_fps_movement(
 ) {
     const SPEED: f32 = 2.0;
     for (transform, mut mov) in query.iter_mut() {
-        let mut direction = Vec2::new(0., 0.);
+        let forward = -Vec2::new(transform.forward().x, transform.forward().z);
+        let right = Vec2::new(transform.forward().z, -transform.forward().x);
 
         if keyboard_input.pressed(KeyCode::KeyW) {
-            direction.y -= f32::cos(transform.rotation.y);
-            direction.x -= f32::sin(transform.rotation.y);
-        }
-
-        if keyboard_input.pressed(KeyCode::KeyS) {
-            direction.y += f32::cos(transform.rotation.y);
-            direction.x += f32::sin(transform.rotation.y);
+            mov.acc_input -= forward;
+        } else if keyboard_input.pressed(KeyCode::KeyS) {
+            mov.acc_input += forward;
         }
 
         if keyboard_input.pressed(KeyCode::KeyA) {
-            direction.y += f32::cos(transform.rotation.y - f32::to_radians(90.));
-            direction.x += f32::sin(transform.rotation.y - f32::to_radians(90.));
+            mov.acc_input += right;
+        } else if keyboard_input.pressed(KeyCode::KeyD) {
+            mov.acc_input -= right;
         }
-
-        if keyboard_input.pressed(KeyCode::KeyD) {
-            direction.y += f32::cos(transform.rotation.y + f32::to_radians(90.));
-            direction.x += f32::sin(transform.rotation.y + f32::to_radians(90.));
-        }
-
-        mov.acc_input += direction;
 
         // Need to normalize and scale because otherwise
         // diagonal movement would be faster than horizontal or vertical movement.
         // This effectively averages the accumulated input.
-        let normalized = direction.extend(0.0).normalize_or_zero() * SPEED;
+        let normalized = mov.acc_input.extend(0.0).normalize_or_zero() * SPEED;
 
         mov.velocity.x = normalized.x;
         mov.velocity.z = normalized.y;
@@ -95,6 +88,7 @@ pub fn advance_fps_movement(
         camera.hdr;
         mov.prev_phys_translation = mov.phys_translation;
         let new_translation = mov.velocity * fixed_time.delta_secs();
+        // println!("{}", new_translation);
         mov.phys_translation += new_translation;
 
         // Reset the input accumulator, as we are currently consuming all input that happened since the last fixed timestep.

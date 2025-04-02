@@ -1,12 +1,19 @@
 use bevy::{
     asset::Assets,
-    color::{palettes::tailwind, Color},
+    color::{
+        palettes::{css::WHITE, tailwind},
+        Color,
+    },
     core_pipeline::core_3d::Camera3d,
     ecs::system::{Commands, ResMut},
-    math::primitives::Cuboid,
+    gizmos,
+    math::{
+        primitives::{Cuboid, Sphere},
+        Vec3, Vec3Swizzles,
+    },
     pbr::{MeshMaterial3d, NotShadowCaster, StandardMaterial},
     render::{
-        camera::{Camera, PerspectiveProjection, Projection},
+        camera::{Camera, PerspectiveProjection, Projection, Viewport},
         mesh::{Mesh, Mesh3d},
         view::RenderLayers,
     },
@@ -29,19 +36,28 @@ pub fn create_player(
     // TODO: something better than just a cuboid
     let arm = meshes.add(Cuboid::new(0.1, 0.1, 0.5));
     let arm_material = materials.add(Color::from(tailwind::TEAL_200));
+    let cross_hair = meshes.add(Sphere::new(0.1));
+    let cross_hair_material = materials.add(Color::from(tailwind::RED_950));
+
+    // crosshair
 
     commands
         .spawn((
-            FPSMovement::default(),
+            Transform::default(),
+            FPSMovement {
+                //prev_phys_translation: Vec3::new(-5.0, 1.80, -5.0),
+                phys_translation: Vec3::new(-5.0, 1.80, 0.0),
+                ..default()
+            },
             FPSCamera {
                 sensitivity: DEFAULT_SENSITIVITY,
             },
+            Camera { ..default() },
             Camera3d { ..default() },
             Projection::from(PerspectiveProjection {
                 fov: 90.0_f32.to_radians(),
                 ..default()
             }),
-            Transform::from_xyz(-5.0, 1.80, -5.0),
         ))
         .with_children(|parent| {
             // Spawn view model camera.
@@ -65,6 +81,16 @@ pub fn create_player(
                 Mesh3d(arm),
                 MeshMaterial3d(arm_material),
                 Transform::from_xyz(0.2, -0.1, -0.25),
+                // Ensure the arm is only rendered by the view model camera.
+                RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
+                // The arm is free-floating, so shadows would look weird.
+                NotShadowCaster,
+            ));
+
+            parent.spawn((
+                Mesh3d(cross_hair),
+                MeshMaterial3d(cross_hair_material),
+                Transform::from_xyz(0.0, 0.0, -30.0),
                 // Ensure the arm is only rendered by the view model camera.
                 RenderLayers::layer(VIEW_MODEL_RENDER_LAYER),
                 // The arm is free-floating, so shadows would look weird.
