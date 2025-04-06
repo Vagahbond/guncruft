@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::{
     ecs::{component::Component, system::Query},
-    input::{keyboard::KeyCode, ButtonInput},
+    input::{ButtonInput, keyboard::KeyCode},
     math::{Vec2, Vec3},
     prelude::*,
 };
@@ -41,21 +41,28 @@ pub fn handle_fps_movement(
 
         if keyboard_input.pressed(KeyCode::KeyW) {
             mov.acc_input -= forward;
-        } else if keyboard_input.pressed(KeyCode::KeyS) {
+        }
+
+        if keyboard_input.pressed(KeyCode::KeyS) {
             mov.acc_input += forward;
         }
 
         if keyboard_input.pressed(KeyCode::KeyA) {
             mov.acc_input += right;
-        } else if keyboard_input.pressed(KeyCode::KeyD) {
+        }
+
+        if keyboard_input.pressed(KeyCode::KeyD) {
             mov.acc_input -= right;
         }
 
         // Need to normalize and scale because otherwise
         // diagonal movement would be faster than horizontal or vertical movement.
         // This effectively averages the accumulated input.
-        let normalized = mov.acc_input.extend(0.0).normalize_or_zero() * SPEED;
+        let mut normalized = mov.acc_input.extend(0.0).normalize_or_zero() * SPEED;
 
+        if (keyboard_input.pressed(KeyCode::ShiftLeft)) {
+            normalized *= 2.0;
+        }
         mov.velocity.x = normalized.x;
         mov.velocity.z = normalized.y;
     }

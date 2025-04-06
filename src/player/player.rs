@@ -1,15 +1,15 @@
 use bevy::{
     asset::Assets,
     color::{
-        palettes::{css::WHITE, tailwind},
         Color,
+        palettes::{css::WHITE, tailwind},
     },
     core_pipeline::core_3d::Camera3d,
     ecs::system::{Commands, ResMut},
     gizmos,
     math::{
-        primitives::{Cuboid, Sphere},
         Vec3, Vec3Swizzles,
+        primitives::{Cuboid, Sphere},
     },
     pbr::{MeshMaterial3d, NotShadowCaster, StandardMaterial},
     render::{
@@ -21,7 +21,7 @@ use bevy::{
     utils::default,
 };
 
-use super::{fps_camera::FPSCamera, fps_movement::FPSMovement};
+use super::{creative_mode::CreativeMod, fps_camera::FPSCamera, fps_movement::FPSMovement};
 
 const DEFAULT_SENSITIVITY: f32 = 0.003;
 /// Used by the view model camera and the player's arm.
@@ -44,6 +44,7 @@ pub fn create_player(
     commands
         .spawn((
             Transform::default(),
+            CreativeMod,
             FPSMovement {
                 //prev_phys_translation: Vec3::new(-5.0, 1.80, -5.0),
                 phys_translation: Vec3::new(-5.0, 1.80, 0.0),
