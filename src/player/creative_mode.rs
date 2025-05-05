@@ -4,8 +4,6 @@ use bevy::{
     prelude::*,
 };
 
-use crate::environment::cube::{CUBE_SIZE, Cube};
-
 use super::fps_camera::FPSCamera;
 
 #[derive(Component)]

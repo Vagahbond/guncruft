@@ -1,16 +1,13 @@
 use std::f32::consts::PI;
 
 use bevy::window::{CursorGrabMode, PrimaryWindow};
-use bevy::{color::palettes::css::BLUE, pbr::light_consts::lux::FULL_DAYLIGHT, prelude::*};
-use environment::cube::Cube;
-use player::creative_mode::lay_cube;
+use bevy::{pbr::light_consts::lux::FULL_DAYLIGHT, prelude::*};
 use player::{
     fps_camera::move_camera,
     fps_movement::{advance_fps_movement, handle_fps_movement, interpolate_fps_movement},
     player::create_player,
 };
 
-pub mod environment;
 pub mod player;
 
 #[derive(Component)]
@@ -20,7 +17,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, (setup_world, create_player))
-        .add_systems(Update, (move_camera, animate_light, lay_cube))
+        .add_systems(Update, (move_camera, animate_light))
         .add_systems(FixedUpdate, advance_fps_movement)
         .add_systems(
             // The `RunFixedMainLoop` schedule allows us to schedule systems to run before and after the fixed timestep loop.
@@ -53,27 +50,6 @@ fn setup_world(
 
     // also hide the cursor
     primary_window.cursor_options.visible = false;
-
-    // cube
-    commands.spawn((
-        Cube,
-        Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
-        MeshMaterial3d(materials.add(StandardMaterial {
-            clearcoat: 1.0,
-            clearcoat_perceptual_roughness: 0.1,
-            metallic: 0.9,
-            perceptual_roughness: 0.5,
-            base_color: BLUE.into(),
-            ..default()
-        })),
-        Transform::from_xyz(0.0, 1.0, 0.0),
-    ));
-    commands.spawn((
-        Cube,
-        Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
-        MeshMaterial3d(materials.add(Color::srgb_u8(0, 255, 0))),
-        Transform::from_xyz(0.0, 2.0, 0.0),
-    ));
 
     // light
     commands.spawn((
