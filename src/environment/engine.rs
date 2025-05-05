@@ -12,7 +12,7 @@ use super::{
     block::{BlockData, BlockType},
     chunk::{CHUNK_SIZE3, ChunkData, ChunksRefs},
     mesher::{self, ChunkMesh},
-    rendering::{ATTRIBUTE_VOXEL, GlobalChunkMaterial},
+    rendering::ATTRIBUTE_VOXEL,
     scanner::Scanner,
     utils::{get_edging_chunk, vec3_to_index},
 };
@@ -254,6 +254,26 @@ pub fn start_mesh_tasks(
     }
 }
 
+///! destroy enqueued, chunk mesh entities
+pub fn unload_mesh(mut commands: Commands, mut voxel_engine: ResMut<Engine>) {
+    let Engine {
+        unload_mesh_queue,
+        chunk_entities,
+        ..
+    } = voxel_engine.as_mut();
+    let mut retry = Vec::new();
+    for chunk_pos in unload_mesh_queue.drain(..) {
+        let Some(chunk_id) = chunk_entities.remove(&chunk_pos) else {
+            continue;
+        };
+        if let Ok(mut entity_commands) = commands.get_entity(chunk_id) {
+            entity_commands.despawn();
+        }
+        // world_data.remove(&chunk_pos);
+    }
+    unload_mesh_queue.append(&mut retry);
+}
+
 ///! join the chunkdata threads
 pub fn join_data(mut voxel_engine: ResMut<Engine>) {
     let Engine {
@@ -316,7 +336,6 @@ pub fn join_mesh(
     mut voxel_engine: ResMut<Engine>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    global_chunk_material: Res<GlobalChunkMaterial>,
 ) {
     let Engine {
         mesh_tasks,
